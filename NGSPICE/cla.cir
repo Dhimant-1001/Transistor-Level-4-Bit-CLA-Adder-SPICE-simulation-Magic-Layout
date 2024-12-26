@@ -1,0 +1,134 @@
+.include TSMC_180nm.txt
+.include subckts.cir
+.param SUPPLY=1.8
+.param LAMBDA=0.09u
+.global gnd vdd
+
+Vdd vdd gnd 'SUPPLY'
+
+** P and G generator **
+*p0 g0
+x1 a0 b0 g0 vdd gnd and2
+x2 a0bar a0 vdd gnd inv
+x3 b0bar b0 vdd gnd inv
+x4 a0 a0bar b0 b0bar p0 vdd gnd xor
+*p1 g1
+x5 a1 b1 g1 vdd gnd and2
+x6 a1bar a1 vdd gnd inv
+x7 b1bar b1 vdd gnd inv
+x8 a1 a1bar b1 b1bar p1 vdd gnd xor
+*p2 g2
+x9 a2 b2 g2 vdd gnd and2
+x10 a2bar a2 vdd gnd inv
+x11 b2bar b2 vdd gnd inv
+x12 a2 a2bar b2 b2bar p2 vdd gnd xor
+*p3 g3
+x13 a3 b3 g3 vdd gnd and2
+x14 a3bar a3 vdd gnd inv
+x15 b3bar b3 vdd gnd inv
+x16 a3 a3bar b3 b3bar p3 vdd gnd xor
+
+
+** Carry Lookahead Block **
+* c1 *
+x17 p0 c0 p0c0 vdd gnd and2
+x18 g0 p0c0 c1 vdd gnd or2
+* c2 *
+x19 p0 p1 c0 p1p0c0 vdd gnd and3
+x20 p1 g0 p1g0 vdd gnd and2
+x21 g1 p1g0 p1p0c0 c2 vdd gnd or3
+
+*x19 p0c0 p1 p1p0c0 vdd gnd and2
+
+* c3 *
+x22 p2 g1 p2g1 vdd gnd and2
+x23 p2 p1 g0 p2p1g0 vdd gnd and3
+x24 p0 p1 p2 c0 p2p1p0c0 vdd gnd and4
+x25 g2 p2g1 p2p1g0 p2p1p0c0 c3 vdd gnd or4
+
+*x23 p2 p1g0  p2p1g0 vdd gnd and2
+*x24 p2 p1p0c0 p2p1p0c0 vdd gnd and2
+
+* c4 *
+x26 p3 g2 p3g2 vdd gnd and2
+x27 p3 p2 g1 p3p2g1 vdd gnd and3
+x28 p3 p2 p1 g0 p3p2p1g0 vdd gnd and4
+x29 p3 p2 p1 p0 c0 p3p2p1p0c0 vdd gnd and5
+x30 g3 p3g2 p3p2g1 p3p2p1g0 p3p2p1p0c0 c4 vdd gnd or5
+
+*x27 p3 p2g1 p3p2g1 vdd gnd and2
+*x28 p3 p2p1g0 p3p2p1g0 vdd gnd and2
+*x29 p3 p2p1p0c0 p3p2p1p0c0 vdd gnd and2
+
+
+** Sum Generator **
+* s0
+x31 p0bar p0 vdd gnd inv
+x32 c0bar c0 vdd gnd inv
+x33 p0 p0bar c0 c0bar s0 vdd gnd xor
+*s1
+x34 p1bar p1 vdd gnd inv
+x35 c1bar c1 vdd gnd inv
+x36 p1 p1bar c1 c1bar s1 vdd gnd xor
+*s2
+x37 p2bar p2 vdd gnd inv
+x38 c2bar c2 vdd gnd inv
+x39 p2 p2bar c2 c2bar s2 vdd gnd xor
+*s3
+x40 p3bar p3 vdd gnd inv
+x41 c3bar c3 vdd gnd inv
+x42 p3 p3bar c3 c3bar s3 vdd gnd xor
+
+** Input D positive edge flipflops
+*input a3a2a1a0
+x43 a0d a0 clk vdd gnd ffposedge
+x44 a1d a1 clk vdd gnd ffposedge
+x45 a2d a2 clk vdd gnd ffposedge
+x46 a3d a3 clk vdd gnd ffposedge
+*input b3b2b1b0
+x47 b0d b0 clk vdd gnd ffposedge
+x48 b1d b1 clk vdd gnd ffposedge
+x49 b2d b2 clk vdd gnd ffposedge
+x50 b3d b3 clk vdd gnd ffposedge
+*input c0
+x51 c0d c0 clk vdd gnd ffposedge
+
+
+** Output D positive edge flipflops
+*output s3s2s1s0
+x52 s0 s0q clk vdd gnd ffposedge
+x53 s1 s1q clk vdd gnd ffposedge
+x54 s2 s2q clk vdd gnd ffposedge
+x55 s3 s3q clk vdd gnd ffposedge
+*output c4
+x56 c4 c4q clk vdd gnd ffposedge
+
+
+vclk clk gnd pulse 0 1.8 0 1ns 1ns 10ns 20ns
+
+va0 a0d gnd pulse 0 1.8 0 1ns 1ns 13ns 26ns
+va1 a1d gnd 0
+va2 a2d gnd 'SUPPLY'
+va3 a3d gnd pulse 0 1.8 0 1ns 1ns 8ns 16ns
+
+vb0 b0d gnd 0
+vb1 b1d gnd pulse 0 1.8 0 1ns 1ns 7ns 14ns
+vb2 b2d gnd 'SUPPLY'
+vb3 b3d gnd 'SUPPLY'
+
+vc0 c0d gnd 0
+
+.tran  0.01n 100ns
+.control
+run
+plot v(a0) v(b0)+2 v(c0)+4 v(s0q)+6
+plot v(a1) v(b1)+2 v(c1)+4 v(s1q)+6
+plot v(a2) v(b2)+2 v(c2)+4 v(s2q)+6
+plot v(a3) v(b3)+2 v(c3)+4 v(s3q)+6 v(c4q)+8
+
+set hcopypscolor = 1
+set color0=white
+set color1=black
+.endc
+
+
