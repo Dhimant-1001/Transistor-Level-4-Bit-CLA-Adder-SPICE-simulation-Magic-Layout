@@ -1,0 +1,2 @@
+# Transistor-Level-4-Bit-CLA-Adder-SPICE-simulation-Magic-Layout
+This repository showcases the transistor-level design of a 4-bit Carry Look-Ahead Adder (CLA) using MOSFETs. It includes both pre- and post-layout analysis using SPICE simulations and Magic layout. The high-speed design meets strict timing constraints, leveraging propagate/generate logic and carry look-ahead mechanisms for advanced VLSI studies.
